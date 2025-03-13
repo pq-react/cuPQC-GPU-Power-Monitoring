@@ -129,6 +129,7 @@ python3 /root/gpu_power_monitor.py &
 ```
 
 ### III. Configure Grafana Data Source
+- As a prerequisite you have to install and setup Grafana as described in [Grafana Documentation](https://grafana.com/docs/grafana/latest/setup-grafana/installation/) or in step 3 of [CAM repository](https://github.com/pq-react/CAM---Context-Agility-Manager).
 
 Launch the Grafana UI at http://<serverIP>:3000 in your browser and the following Grafana login page should greet you.
 
