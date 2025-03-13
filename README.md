@@ -1,29 +1,29 @@
 # cuPQC-GPU-Power-Monitoring
-Monitoring nvidia GPU deploying cuPQC, Influxdb and Grafana components. This repository provides a **Dockerized GPU monitoring setup** that collects **NVIDIA GPU power draw metrics** using **Telegraf**, stores them in **InfluxDB**, and visualizes the data in **Grafana**.
+Monitoring Nvidia GPU deploying cuPQC, Influxdb and Grafana components. This repository provides a **Dockerized GPU monitoring setup** that collects **NVIDIA GPU power draw metrics** using **Telegraf**, stores them in **InfluxDB**, and visualizes the data in **Grafana**.
 
-## **1. Pull and Run the Docker Container**
+## Pull and Run the  gpu-monitor Docker Container
 To pull and run the container from Docker Hub:
 
 ```bash
 docker pull demogoikon/gpu-monitor:latest
-docker run -d --runtime=nvidia --name=gpu-monitor myusername/gpu-monitor
+docker run -d --runtime=nvidia --name=gpu-monitor demogoikon/gpu-monitor
 ```
-This starts the container with cuPQC, Telegraf, InfluxDB.
+This pulls and starts the container with cuPQC, Telegraf, InfluxDB.
 
-The steps that has been followed to setup this container are described below:
+*The steps that has been followed to setup this container are described below:*
 
-## 2. Install cuPQC
+### I. Install cuPQC
 cuPQC is an NVIDIA CUDA-based library for Post-Quantum Cryptography. We followed the steps below to install it inside our container.
 
 To install the cuPQC (CUDA Post-Quantum Cryptography) library within your Docker container, follow these steps:​
 
 Note: Initially we have ensured that our Docker container met all cuPQC requirements, including the appropriate CUDA Toolkit version and supported GPU architecture. [requirements](https://docs.nvidia.com/cuda/cupqc/requirements.html)
 
-### a. Download the cuPQC Package:
+#### a. Download the cuPQC Package:
 
 Visit the NVIDIA cuPQC Downloads page to obtain the latest version of the cuPQC library [current latest version]( https://developer.download.nvidia.com/compute/cupqc/redist/cupqc/cupqc-pkg-0.2.0.tar.gz).
 
-### b. Transfer the Package into the Docker Container:
+#### b. Transfer the Package into the Docker Container:
 
 Assuming you've downloaded the cuPQC package (cupqc-<version>.tar.gz) to your host machine, you can copy it into your running Docker container using the following command:​
 
@@ -32,41 +32,44 @@ docker cp cupqc-<version>.tar.gz <container_id>:/root/
 ```
 Replace <version> with the actual version number and <container_id> with your container's ID or name.
 
-Ensure NVIDIA GPU support is enabled inside Docker.[Guide to Run CUDA WSL Docker](https://forums.developer.nvidia.com/t/guide-to-run-cuda-wsl-docker-with-latest-versions-21382-windows-build-470-14-nvidia/178365)
+Ensure NVIDIA GPU support is enabled inside Docker.([Guide to Run CUDA WSL Docker](https://forums.developer.nvidia.com/t/guide-to-run-cuda-wsl-docker-with-latest-versions-21382-windows-build-470-14-nvidia/178365))
 
-### c. Access the Docker Container:
+#### c. Access the Docker Container:
 Enter you Docker container's shell:
 ``` bash
 docker exec -it <container_id> /bin/bash
 ```
-### d. Extract the cuPQC Package:
+#### d. Extract the cuPQC Package:
 
 Navigate to the directory containing the package and extract it:
 ``` bash
 cd /root/
 tar -xzf cupqc-<version>.tar.gz
 ```
-### e. Use Makefile to compile the examples
+#### e. Use Makefile to compile the examples
 
 - Compile and link CUDA-based cuPQC examples using Nvidia's nvcc compiler using the Makefile in the 'example' - - folder. (path example: ~/cupqc/cupqc-pkg-0.2.0/example)
 
-### f. Now you can execute the cupqc examples:
+#### f. Now you can execute the cupqc examples:
 
 ``` bash
 ./example_ml_dsa
 ./example_ml_kem
 ```
 
-## 3. Installing & Configuring Telegraf
+### II. Installing & Configuring Telegraf
 
-- Telegraf collects GPU power draw metrics from nvidia-smi and sends them to InfluxDB.
+Telegraf collects GPU power draw metrics from nvidia-smi and sends them to InfluxDB.
 
-### a. Install Telegraf
+#### Important Note:
+You need first to setup a database for your data to be stored. You can follow the installation guide of [Influxdb](https://docs.influxdata.com/influxdb/v2/install/) or [CAM repository](https://github.com/pq-react/CAM---Context-Agility-Manager) to deploy a database and set telegraf configuration to send your data there.
+
+#### a. Install Telegraf
 
 ``` bash
 apt update && apt install telegraf -y
 ```
-### b. Edit Telegraf Configuration
+#### b. Edit Telegraf Configuration
 
 - Modify the following sections:
 
@@ -99,13 +102,13 @@ bucket = "<bucket_name>"
   organization = "name_of_organization"
   bucket = "name_of_bucket"
 ```
-### c. Restart Telegraf
+#### c. Restart Telegraf
 ``` bash
 telegraf --config /etc/telegraf/telegraf.conf
 ```
 - Now Telegraf sends GPU metrics to InfluxDB.
 
-### d. Configure and Run python script for gpu consumption metrics.
+#### d. Configure and Run python script for gpu consumption metrics.
 
 - The python snippet provided enables recovering Nvidia GPU's power draw.
 
@@ -125,7 +128,7 @@ INFLUXDB_TOKEN = "<influxdb****token>"
 python3 /root/gpu_power_monitor.py &
 ```
 
-## Configure Grafana Data Source
+### III. Configure Grafana Data Source
 
 Launch the Grafana UI at http://<serverIP>:3000 in your browser and the following Grafana login page should greet you.
 
@@ -165,7 +168,7 @@ Max series: 10000
 
   7. Click the `Save and Test` button to verify the setup. The next message should be displayed.
 
-## Set up Grafana Dashboards
+### IV. Set up Grafana Dashboards
 
 The next step is to set up Grafana Dashboard.
 
@@ -173,7 +176,7 @@ The next step is to set up Grafana Dashboard.
 
   2. From the `Import dashboard` load the provided .json file which contains the dedicated dashboard setup.
 
-### Important Note
+#### Important Note
 - If grafana doesn't let you upload .json file then you should copy and paste the content of .json file in the `Import  via dashboard JSON model` frame and then press load.
 - In the provided .json file it is assumed that the username is `localadmin` and the name of the bucket is `docker_nvidia_bucket` or `Desktop_GPU`. If otherwise please change those values in the entire .json file with the ones that match your setup.
 
